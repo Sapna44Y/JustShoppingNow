@@ -209,7 +209,6 @@ export async function logoutController(request, response) {
   }
 }
 
-// *****
 //upload user avatar
 export async function uploadAvatar(request, response) {
   try {
@@ -303,7 +302,7 @@ export async function forgotPasswordController(request, response) {
 
     await sendEmail({
       sendTo: email,
-      subject: "Forgot password from Binkeyit",
+      subject: "Forgot password from JustShoppingNow",
       html: forgotPasswordTemplate({
         name: user.name,
         otp: otp,
