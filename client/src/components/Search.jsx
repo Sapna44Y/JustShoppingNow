@@ -10,13 +10,21 @@ const Search = () => {
   const location = useLocation();
   const [isSearchPage, setIsSearchPage] = useState(false);
   const [isMobile] = useMobile();
-  const params = useLocation();
-  const searchText = params.search.slice(3);
+
+  // Properly extract search query
+  const searchParams = new URLSearchParams(location.search);
+  const searchText = searchParams.get("q") || "";
+  const [inputValue, setInputValue] = useState(searchText);
 
   useEffect(() => {
     const isSearch = location.pathname === "/search";
     setIsSearchPage(isSearch);
   }, [location]);
+
+  // Update input value when URL changes
+  useEffect(() => {
+    setInputValue(searchText);
+  }, [searchText]);
 
   const redirectToSearchPage = () => {
     navigate("/search");
@@ -24,12 +32,29 @@ const Search = () => {
 
   const handleOnChange = (e) => {
     const value = e.target.value;
-    const url = `/search?q=${value}`;
+    setInputValue(value);
+    const url = `/search?q=${encodeURIComponent(value)}`;
     navigate(url);
   };
 
+  const handleSearchSubmit = (e) => {
+    if (e.key === "Enter") {
+      const value = e.target.value;
+      const url = `/search?q=${encodeURIComponent(value)}`;
+      navigate(url);
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (inputValue) {
+      navigate(`/search?q=${encodeURIComponent(inputValue)}`);
+    } else if (!isSearchPage) {
+      redirectToSearchPage();
+    }
+  };
+
   return (
-    <div className="w-full  min-w-[300px] lg:min-w-[420px] h-11 lg:h-12 rounded-lg border overflow-hidden flex items-center text-neutral-500 bg-slate-50 group focus-within:border-primary-200 ">
+    <div className="w-full min-w-[300px] lg:min-w-[420px] h-11 lg:h-12 rounded-lg border overflow-hidden flex items-center text-neutral-500 bg-slate-50 group focus-within:border-primary-200">
       <div>
         {isMobile && isSearchPage ? (
           <Link
@@ -39,7 +64,10 @@ const Search = () => {
             <FaArrowLeft size={20} />
           </Link>
         ) : (
-          <button className="flex justify-center items-center h-full p-3 group-focus-within:text-primary-200">
+          <button
+            className="flex justify-center items-center h-full p-3 group-focus-within:text-primary-200"
+            onClick={handleSearchClick}
+          >
             <IoSearch size={22} />
           </button>
         )}
@@ -49,18 +77,17 @@ const Search = () => {
           //not in search page
           <div
             onClick={redirectToSearchPage}
-            className="w-full h-full flex items-center"
+            className="w-full h-full flex items-center cursor-text"
           >
             <TypeAnimation
               sequence={[
-                // Same substring at the start will only be typed out once, initially
                 'Search "milk"',
-                1000, // wait 1s before replacing "Mice" with "Hamsters"
+                1000,
                 'Search "bread"',
                 1000,
                 'Search "sugar"',
                 1000,
-                'Search "panner"',
+                'Search "paneer"',
                 1000,
                 'Search "chocolate"',
                 1000,
@@ -71,6 +98,7 @@ const Search = () => {
                 'Search "egg"',
                 1000,
                 'Search "chips"',
+                1000,
               ]}
               wrapper="span"
               speed={50}
@@ -78,15 +106,16 @@ const Search = () => {
             />
           </div>
         ) : (
-          //when i was search page
+          //when on search page
           <div className="w-full h-full">
             <input
               type="text"
               placeholder="Search for atta dal and more."
               autoFocus
-              defaultValue={searchText}
-              className="bg-transparent w-full h-full outline-none"
+              value={inputValue}
+              className="bg-transparent w-full h-full outline-none px-2"
               onChange={handleOnChange}
+              onKeyPress={handleSearchSubmit}
             />
           </div>
         )}

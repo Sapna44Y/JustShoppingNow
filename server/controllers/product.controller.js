@@ -72,13 +72,20 @@ export const getProductController = async (request, response) => {
       limit = 10;
     }
 
-    const query = search
-      ? {
-          $text: {
-            $search: search,
-          },
-        }
-      : {};
+    // const query = search
+    //   ? {
+    //       $text: {
+    //         $search: search,
+    //       },
+    //     }
+    //   : {};
+
+    const query =
+      search && search.trim() !== ""
+        ? {
+            name: { $regex: search.trim(), $options: "i" },
+          }
+        : {};
 
     const skip = (page - 1) * limit;
 
@@ -287,13 +294,17 @@ export const searchProduct = async (request, response) => {
       limit = 10;
     }
 
-    const query = search
-      ? {
-          $text: {
-            $search: search,
-          },
-        }
-      : {};
+    // Create search query - using regex for partial matching and case insensitivity
+    let query = {};
+    if (search && search.trim() !== "") {
+      const searchTerm = search.trim();
+      query = {
+        $or: [
+          { name: { $regex: searchTerm, $options: "i" } },
+          { description: { $regex: searchTerm, $options: "i" } },
+        ],
+      };
+    }
 
     const skip = (page - 1) * limit;
 

@@ -54,14 +54,17 @@ const ProductDisplayPage = () => {
   const handleScrollLeft = () => {
     imageContainer.current.scrollLeft -= 100;
   };
+
   console.log("product data", data);
+
   return (
-    <section className="container mx-auto p-4 grid lg:grid-cols-2 ">
+    <section className="container mx-auto p-4 grid lg:grid-cols-2">
       <div className="">
         <div className="bg-white lg:min-h-[65vh] lg:max-h-[65vh] rounded min-h-56 max-h-56 h-full w-full">
           <img
             src={data.image[image]}
             className="w-full h-full object-scale-down"
+            alt={data.name}
           />
         </div>
         <div className="flex items-center justify-center gap-3 my-2">
@@ -95,7 +98,7 @@ const ProductDisplayPage = () => {
               );
             })}
           </div>
-          <div className="w-full -ml-3 h-full hidden lg:flex justify-between absolute  items-center">
+          <div className="w-full -ml-3 h-full hidden lg:flex justify-between absolute items-center">
             <button
               onClick={handleScrollLeft}
               className="z-10 bg-white relative p-1 rounded-full shadow-lg"
@@ -110,26 +113,10 @@ const ProductDisplayPage = () => {
             </button>
           </div>
         </div>
-        <div></div>
 
-        <div className="my-4  hidden lg:grid gap-3 ">
-          <div>
-            <p className="font-semibold">Description</p>
-            <p className="text-base">{data.description}</p>
-          </div>
-          <div>
-            <p className="font-semibold">Unit</p>
-            <p className="text-base">{data.unit}</p>
-          </div>
-          {data?.more_details &&
-            Object.keys(data?.more_details).map((element, index) => {
-              return (
-                <div>
-                  <p className="font-semibold">{element}</p>
-                  <p className="text-base">{data?.more_details[element]}</p>
-                </div>
-              );
-            })}
+        {/* Product Details Section - Hidden on mobile, visible on desktop */}
+        <div className="my-4 hidden lg:grid gap-3">
+          <ProductDetails data={data} />
         </div>
       </div>
 
@@ -163,35 +150,34 @@ const ProductDisplayPage = () => {
         {data.stock === 0 ? (
           <p className="text-lg text-red-500 my-2">Out of Stock</p>
         ) : (
-          // <button className='my-4 px-4 py-1 bg-green-600 hover:bg-green-700 text-white rounded'>Add</button>
           <div className="my-4">
             <AddToCartButton data={data} />
           </div>
         )}
 
-        <h2 className="font-semibold">Why shop from binkeyit? </h2>
+        <h2 className="font-semibold">Why shop from JustShoppingNow?</h2>
         <div>
-          <div className="flex  items-center gap-4 my-4">
+          <div className="flex items-center gap-4 my-4">
             <img src={image1} alt="superfast delivery" className="w-20 h-20" />
             <div className="text-sm">
               <div className="font-semibold">Superfast Delivery</div>
               <p>
-                Get your orer delivered to your doorstep at the earliest from
+                Get your order delivered to your doorstep at the earliest from
                 dark stores near you.
               </p>
             </div>
           </div>
-          <div className="flex  items-center gap-4 my-4">
+          <div className="flex items-center gap-4 my-4">
             <img src={image2} alt="Best prices offers" className="w-20 h-20" />
             <div className="text-sm">
               <div className="font-semibold">Best Prices & Offers</div>
               <p>
                 Best price destination with offers directly from the
-                nanufacturers.
+                manufacturers.
               </p>
             </div>
           </div>
-          <div className="flex  items-center gap-4 my-4">
+          <div className="flex items-center gap-4 my-4">
             <img src={image3} alt="Wide Assortment" className="w-20 h-20" />
             <div className="text-sm">
               <div className="font-semibold">Wide Assortment</div>
@@ -203,28 +189,37 @@ const ProductDisplayPage = () => {
           </div>
         </div>
 
-        {/****only mobile */}
-        <div className="my-4 grid gap-3 ">
-          <div>
-            <p className="font-semibold">Description</p>
-            <p className="text-base">{data.description}</p>
-          </div>
-          <div>
-            <p className="font-semibold">Unit</p>
-            <p className="text-base">{data.unit}</p>
-          </div>
-          {data?.more_details &&
-            Object.keys(data?.more_details).map((element, index) => {
-              return (
-                <div>
-                  <p className="font-semibold">{element}</p>
-                  <p className="text-base">{data?.more_details[element]}</p>
-                </div>
-              );
-            })}
+        {/* Product Details Section - Visible only on mobile */}
+        <div className="my-4 grid gap-3 lg:hidden">
+          <ProductDetails data={data} />
         </div>
       </div>
     </section>
+  );
+};
+
+// Create a separate component for product details to avoid code duplication
+const ProductDetails = ({ data }) => {
+  return (
+    <>
+      <div>
+        <p className="font-semibold">Description</p>
+        <p className="text-base">{data.description}</p>
+      </div>
+      <div>
+        <p className="font-semibold">Unit</p>
+        <p className="text-base">{data.unit}</p>
+      </div>
+      {data?.more_details &&
+        Object.keys(data?.more_details).map((element, index) => {
+          return (
+            <div key={element + index}>
+              <p className="font-semibold">{element}</p>
+              <p className="text-base">{data?.more_details[element]}</p>
+            </div>
+          );
+        })}
+    </>
   );
 };
 

@@ -7,6 +7,7 @@ import CardProduct from "../components/CardProduct";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useLocation } from "react-router-dom";
 import noDataImage from "../assets/nothing here yet.webp";
+import { useDebounce } from "../hooks/useDebounce";
 
 const SearchPage = () => {
   const [data, setData] = useState([]);
@@ -14,8 +15,14 @@ const SearchPage = () => {
   const loadingArrayCard = new Array(10).fill(null);
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
-  const params = useLocation();
-  const searchText = params?.search?.slice(3);
+  const location = useLocation();
+
+  // Properly extract search query parameter
+  const searchParams = new URLSearchParams(location.search);
+  const searchText = searchParams.get("q") || "";
+
+  // Add debouncing to prevent too many API calls
+  const debouncedSearchText = useDebounce(searchText, 500);
 
   const fetchData = async () => {
     try {
@@ -23,8 +30,9 @@ const SearchPage = () => {
       const response = await Axios({
         ...SummaryApi.searchProduct,
         data: {
-          search: searchText,
+          search: debouncedSearchText,
           page: page,
+          limit: 10,
         },
       });
 
@@ -39,7 +47,6 @@ const SearchPage = () => {
           });
         }
         setTotalPage(responseData.totalPage);
-        console.log(responseData);
       }
     } catch (error) {
       AxiosToastError(error);
@@ -48,14 +55,24 @@ const SearchPage = () => {
     }
   };
 
+  // Reset and fetch when debounced search text changes
   useEffect(() => {
-    fetchData();
-  }, [page, searchText]);
+    if (debouncedSearchText !== undefined) {
+      setPage(1);
+      setData([]);
+      fetchData();
+    }
+  }, [debouncedSearchText]);
 
-  console.log("page", page);
+  // Fetch when page changes (for pagination)
+  useEffect(() => {
+    if (page > 1) {
+      fetchData();
+    }
+  }, [page]);
 
   const handleFetchMore = () => {
-    if (totalPage > page) {
+    if (totalPage > page && !loading) {
       setPage((preve) => preve + 1);
     }
   };
@@ -63,12 +80,28 @@ const SearchPage = () => {
   return (
     <section className="bg-white">
       <div className="container mx-auto p-4">
-        <p className="font-semibold">Search Results: {data.length} </p>
+        <p className="font-semibold">
+          {searchText ? (
+            <>Search Results for {data.length} items found</>
+          ) : (
+            <>Enter a search term to find products</>
+          )}
+        </p>
 
         <InfiniteScroll
           dataLength={data.length}
-          hasMore={true}
+          hasMore={totalPage > page}
           next={handleFetchMore}
+          loader={
+            <div className="text-center py-4">Loading more products...</div>
+          }
+          endMessage={
+            data.length > 0 && (
+              <div className="text-center py-4 text-gray-500">
+                You've seen all products
+              </div>
+            )
+          }
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 py-4 gap-4">
             {data.map((p, index) => {
@@ -79,6 +112,7 @@ const SearchPage = () => {
 
             {/***loading data */}
             {loading &&
+              page === 1 &&
               loadingArrayCard.map((_, index) => {
                 return <CardLoading key={"loadingsearchpage" + index} />;
               })}
@@ -92,8 +126,15 @@ const SearchPage = () => {
               <img
                 src={noDataImage}
                 className="w-full h-full max-w-xs max-h-xs block"
+                alt="No data found"
               />
-              <p className="font-semibold my-2">No Data found</p>
+              <p className="font-semibold my-2">
+                {searchText ? (
+                  <>No products found for "{searchText}"</>
+                ) : (
+                  <>Start typing to search for products</>
+                )}
+              </p>
             </div>
           )
         }
